@@ -30,11 +30,7 @@
         app:layout_constraintBottom_toBottomOf="@id/btnSettings"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <!--
-        Permission banner — shown when notification listener access hasn't been granted.
-        Tapping it opens the system settings page to grant it.
-        Hidden once permission is granted.
-    -->
+    <!-- Permission banner -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/permissionBanner"
         android:layout_width="0dp"
@@ -126,7 +122,65 @@
         app:layout_constraintStart_toEndOf="@id/btnPlayPause"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Brightness section -->
+    <!--
+        Progress section: progress bar + elapsed/total time labels.
+        Sits between the buttons and the brightness slider.
+        Invisible (not gone) when no session is active so it doesn't collapse the layout.
+    -->
+    <LinearLayout
+        android:id="@+id/progressSection"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="invisible"
+        app:layout_constraintTop_toBottomOf="@id/btnPlayPause"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/brightnessLabel"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="16dp"
+        android:gravity="center_vertical">
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="6dp"
+            android:progressTint="@color/accent"
+            android:progressBackgroundTint="@color/outline"
+            android:max="100"
+            android:progress="0" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="6dp">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvElapsed"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="0:00"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvTotal"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="0:00"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                android:gravity="end" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Brightness label -->
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/brightnessLabel"
         android:layout_width="wrap_content"
@@ -138,6 +192,7 @@
         app:layout_constraintStart_toStartOf="parent"
         android:layout_marginBottom="8dp" />
 
+    <!-- Brightness slider -->
     <SeekBar
         android:id="@+id/brightnessSlider"
         android:layout_width="0dp"

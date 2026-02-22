@@ -4,10 +4,14 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.media.AudioManager
+import android.media.MediaMetadata
 import android.media.session.MediaController
 import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.SystemClock
 import android.provider.Settings
 import android.view.KeyEvent
 import android.view.View
@@ -25,11 +29,35 @@ class MainActivity : AppCompatActivity() {
     private lateinit var mediaSessionManager: MediaSessionManager
 
     private var activeController: MediaController? = null
+    private var trackDurationMs: Long = 0L
+
+    // Ticks every second while playing to advance the progress bar without polling the session
+    private val progressHandler = Handler(Looper.getMainLooper())
+    private val progressTick = object : Runnable {
+        override fun run() {
+            tickProgress()
+            progressHandler.postDelayed(this, 1000L)
+        }
+    }
 
     private val mediaCallback = object : MediaController.Callback() {
         override fun onPlaybackStateChanged(state: PlaybackState?) {
-            // Fires whenever real playback state changes — headphones, other app UI, etc.
-            runOnUiThread { updatePlayPauseIcon(state) }
+            runOnUiThread {
+                updatePlayPauseIcon(state)
+                updateProgressFromState(state)
+                if (state?.state == PlaybackState.STATE_PLAYING) {
+                    startProgressTicker()
+                } else {
+                    stopProgressTicker()
+                }
+            }
+        }
+
+        override fun onMetadataChanged(metadata: MediaMetadata?) {
+            runOnUiThread {
+                trackDurationMs = metadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0L
+                updateProgressFromState(activeController?.playbackState)
+            }
         }
     }
 
@@ -57,11 +85,13 @@ class MainActivity : AppCompatActivity() {
         } else {
             showPermissionBanner()
             updatePlayPauseIcon(null)
+            resetProgress()
         }
     }
 
     override fun onPause() {
         super.onPause()
+        stopProgressTicker()
         detachMediaController()
     }
 
@@ -85,19 +115,84 @@ class MainActivity : AppCompatActivity() {
             if (controller != null) {
                 activeController = controller
                 controller.registerCallback(mediaCallback)
-                updatePlayPauseIcon(controller.playbackState)
+
+                // Seed duration and position immediately from current state
+                trackDurationMs = controller.metadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0L
+                val state = controller.playbackState
+                updatePlayPauseIcon(state)
+                updateProgressFromState(state)
+
+                if (state?.state == PlaybackState.STATE_PLAYING) startProgressTicker()
             } else {
                 updatePlayPauseIcon(null)
+                resetProgress()
             }
         } catch (e: SecurityException) {
             showPermissionBanner()
             updatePlayPauseIcon(null)
+            resetProgress()
         }
     }
 
     private fun detachMediaController() {
         activeController?.unregisterCallback(mediaCallback)
         activeController = null
+        trackDurationMs = 0L
+    }
+
+    // ---- Progress bar ----
+
+    private fun updateProgressFromState(state: PlaybackState?) {
+        if (state == null || trackDurationMs <= 0L) {
+            resetProgress()
+            return
+        }
+        val posMs = state.position
+        binding.progressBar.max = trackDurationMs.toInt()
+        binding.progressBar.progress = posMs.toInt()
+        binding.tvElapsed.text = formatDuration(posMs)
+        binding.tvTotal.text = formatDuration(trackDurationMs)
+        binding.progressSection.visibility = View.VISIBLE
+    }
+
+    private fun tickProgress() {
+        val state = activeController?.playbackState ?: return
+        if (state.state != PlaybackState.STATE_PLAYING) return
+        if (trackDurationMs <= 0L) return
+
+        // Extrapolate position: lastReportedPosition + (speed * elapsed time since report)
+        val elapsed = SystemClock.elapsedRealtime() - state.lastPositionUpdateTime
+        val extrapolated = (state.position + state.playbackSpeed * elapsed).toLong()
+            .coerceIn(0L, trackDurationMs)
+
+        binding.progressBar.progress = extrapolated.toInt()
+        binding.tvElapsed.text = formatDuration(extrapolated)
+    }
+
+    private fun startProgressTicker() {
+        stopProgressTicker()
+        progressHandler.post(progressTick)
+    }
+
+    private fun stopProgressTicker() {
+        progressHandler.removeCallbacks(progressTick)
+    }
+
+    private fun resetProgress() {
+        stopProgressTicker()
+        binding.progressSection.visibility = View.INVISIBLE
+    }
+
+    private fun formatDuration(ms: Long): String {
+        val totalSeconds = ms / 1000
+        val hours = totalSeconds / 3600
+        val minutes = (totalSeconds % 3600) / 60
+        val seconds = totalSeconds % 60
+        return if (hours > 0) {
+            "%d:%02d:%02d".format(hours, minutes, seconds)
+        } else {
+            "%d:%02d".format(minutes, seconds)
+        }
     }
 
     // ---- Buttons ----
@@ -108,9 +203,7 @@ class MainActivity : AppCompatActivity() {
             if (controls != null) {
                 val isPlaying = activeController?.playbackState?.state == PlaybackState.STATE_PLAYING
                 if (isPlaying) controls.pause() else controls.play()
-                // Icon updates via the mediaCallback — no need to flip it manually
             } else {
-                // No session connected — fire raw key event as fallback
                 dispatchMediaKey(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE)
             }
         }
@@ -161,7 +254,7 @@ class MainActivity : AppCompatActivity() {
         return PreferenceManager.getDefaultSharedPreferences(this).getInt("skip_seconds", 20)
     }
 
-    // ---- UI ----
+    // ---- Play/pause icon ----
 
     private fun updatePlayPauseIcon(state: PlaybackState?) {
         val playing = state?.state == PlaybackState.STATE_PLAYING
