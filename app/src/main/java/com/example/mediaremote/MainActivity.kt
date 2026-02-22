@@ -31,7 +31,6 @@ class MainActivity : AppCompatActivity() {
     private var activeController: MediaController? = null
     private var trackDurationMs: Long = 0L
 
-    // Ticks every second while playing to advance the progress bar without polling the session
     private val progressHandler = Handler(Looper.getMainLooper())
     private val progressTick = object : Runnable {
         override fun run() {
@@ -57,6 +56,7 @@ class MainActivity : AppCompatActivity() {
             runOnUiThread {
                 trackDurationMs = metadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0L
                 updateProgressFromState(activeController?.playbackState)
+                updateNowPlaying(metadata)
             }
         }
     }
@@ -86,6 +86,7 @@ class MainActivity : AppCompatActivity() {
             showPermissionBanner()
             updatePlayPauseIcon(null)
             resetProgress()
+            clearNowPlaying()
         }
     }
 
@@ -116,21 +117,23 @@ class MainActivity : AppCompatActivity() {
                 activeController = controller
                 controller.registerCallback(mediaCallback)
 
-                // Seed duration and position immediately from current state
                 trackDurationMs = controller.metadata?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0L
                 val state = controller.playbackState
                 updatePlayPauseIcon(state)
                 updateProgressFromState(state)
+                updateNowPlaying(controller.metadata)
 
                 if (state?.state == PlaybackState.STATE_PLAYING) startProgressTicker()
             } else {
                 updatePlayPauseIcon(null)
                 resetProgress()
+                clearNowPlaying()
             }
         } catch (e: SecurityException) {
             showPermissionBanner()
             updatePlayPauseIcon(null)
             resetProgress()
+            clearNowPlaying()
         }
     }
 
@@ -138,6 +141,32 @@ class MainActivity : AppCompatActivity() {
         activeController?.unregisterCallback(mediaCallback)
         activeController = null
         trackDurationMs = 0L
+    }
+
+    // ---- Now playing ----
+
+    private fun updateNowPlaying(metadata: MediaMetadata?) {
+        val title = metadata?.getString(MediaMetadata.METADATA_KEY_TITLE)
+        val artist = metadata?.getString(MediaMetadata.METADATA_KEY_ARTIST)
+            ?: metadata?.getString(MediaMetadata.METADATA_KEY_ALBUM_ARTIST)
+            ?: metadata?.getString(MediaMetadata.METADATA_KEY_ALBUM)
+
+        if (title.isNullOrBlank() && artist.isNullOrBlank()) {
+            clearNowPlaying()
+            return
+        }
+
+        binding.nowPlayingSection.visibility = View.VISIBLE
+        binding.tvTitle.text = title ?: ""
+        binding.tvArtist.text = artist ?: ""
+        binding.tvTitle.visibility = if (title.isNullOrBlank()) View.GONE else View.VISIBLE
+        binding.tvArtist.visibility = if (artist.isNullOrBlank()) View.GONE else View.VISIBLE
+    }
+
+    private fun clearNowPlaying() {
+        binding.nowPlayingSection.visibility = View.INVISIBLE
+        binding.tvTitle.text = ""
+        binding.tvArtist.text = ""
     }
 
     // ---- Progress bar ----
@@ -160,7 +189,6 @@ class MainActivity : AppCompatActivity() {
         if (state.state != PlaybackState.STATE_PLAYING) return
         if (trackDurationMs <= 0L) return
 
-        // Extrapolate position: lastReportedPosition + (speed * elapsed time since report)
         val elapsed = SystemClock.elapsedRealtime() - state.lastPositionUpdateTime
         val extrapolated = (state.position + state.playbackSpeed * elapsed).toLong()
             .coerceIn(0L, trackDurationMs)

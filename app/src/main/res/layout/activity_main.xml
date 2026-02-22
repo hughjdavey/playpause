@@ -123,23 +123,61 @@
         app:layout_constraintEnd_toEndOf="parent" />
 
     <!--
-        Progress section: progress bar + elapsed/total time labels.
-        Sits between the buttons and the brightness slider.
-        Invisible (not gone) when no session is active so it doesn't collapse the layout.
+        Now playing section: title and artist/podcast name.
+        Sits between the buttons and the progress bar.
+        Uses invisible so it holds its space when no session is active.
     -->
+    <LinearLayout
+        android:id="@+id/nowPlayingSection"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="invisible"
+        app:layout_constraintTop_toBottomOf="@id/btnPlayPause"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/progressSection"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="4dp">
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text=""
+            android:textColor="@color/text_primary"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:maxLines="2"
+            android:ellipsize="end" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvArtist"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text=""
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:layout_marginTop="3dp" />
+
+    </LinearLayout>
+
+    <!-- Progress section: bar + elapsed/total labels -->
     <LinearLayout
         android:id="@+id/progressSection"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:visibility="invisible"
-        app:layout_constraintTop_toBottomOf="@id/btnPlayPause"
+        app:layout_constraintBottom_toTopOf="@id/brightnessLabel"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/brightnessLabel"
-        android:layout_marginTop="24dp"
-        android:layout_marginBottom="16dp"
-        android:gravity="center_vertical">
+        android:layout_marginBottom="16dp">
 
         <ProgressBar
             android:id="@+id/progressBar"
