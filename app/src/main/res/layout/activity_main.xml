@@ -122,11 +122,7 @@
         app:layout_constraintStart_toEndOf="@id/btnPlayPause"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!--
-        Now playing section: title and artist/podcast name.
-        Sits between the buttons and the progress bar.
-        Uses invisible so it holds its space when no session is active.
-    -->
+    <!-- Now playing section: title and artist -->
     <LinearLayout
         android:id="@+id/nowPlayingSection"
         android:layout_width="0dp"
@@ -174,18 +170,17 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:visibility="invisible"
-        app:layout_constraintBottom_toTopOf="@id/brightnessLabel"
+        app:layout_constraintBottom_toTopOf="@id/volumeLabel"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="16dp">
+        android:layout_marginBottom="20dp">
 
         <ProgressBar
             android:id="@+id/progressBar"
             style="@style/Widget.AppCompat.ProgressBar.Horizontal"
             android:layout_width="match_parent"
             android:layout_height="6dp"
-            android:progressTint="@color/accent"
-            android:progressBackgroundTint="@color/outline"
+            android:progressDrawable="@drawable/seekbar_track"
             android:max="100"
             android:progress="0" />
 
@@ -218,6 +213,32 @@
 
     </LinearLayout>
 
+    <!-- Volume label -->
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/volumeLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🔊  Volume"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toTopOf="@id/volumeSlider"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Volume slider -->
+    <SeekBar
+        android:id="@+id/volumeSlider"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:progressDrawable="@drawable/seekbar_track"
+        android:thumb="@drawable/seekbar_thumb"
+        android:paddingStart="0dp"
+        android:paddingEnd="0dp"
+        app:layout_constraintBottom_toTopOf="@id/brightnessLabel"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="16dp" />
+
     <!-- Brightness label -->
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/brightnessLabel"
@@ -237,8 +258,10 @@
         android:layout_height="48dp"
         android:max="255"
         android:progress="128"
-        android:progressTint="@color/accent"
-        android:thumbTint="@color/accent"
+        android:progressDrawable="@drawable/seekbar_track"
+        android:thumb="@drawable/seekbar_thumb"
+        android:paddingStart="0dp"
+        android:paddingEnd="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

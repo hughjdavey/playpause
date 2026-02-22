@@ -72,11 +72,13 @@ class MainActivity : AppCompatActivity() {
         mediaSessionManager = getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
 
         setupButtons()
+        setupVolumeSlider()
         setupBrightnessSlider()
     }
 
     override fun onResume() {
         super.onResume()
+        syncVolumeSlider()
         syncBrightnessSlider()
         updateSkipButtonLabels()
 
@@ -297,6 +299,27 @@ class MainActivity : AppCompatActivity() {
 
     private fun showPermissionBanner() {
         binding.permissionBanner.visibility = View.VISIBLE
+    }
+
+    // ---- Volume ----
+
+    private fun setupVolumeSlider() {
+        val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+        binding.volumeSlider.max = maxVolume
+
+        binding.volumeSlider.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (fromUser) {
+                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, progress, 0)
+                }
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+    }
+
+    private fun syncVolumeSlider() {
+        binding.volumeSlider.progress = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
     }
 
     // ---- Brightness ----
