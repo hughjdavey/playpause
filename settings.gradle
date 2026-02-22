@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "MediaRemote"
+rootProject.name = "PlayPause"
 include ':app'

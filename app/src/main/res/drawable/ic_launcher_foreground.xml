@@ -6,8 +6,8 @@
     android:viewportHeight="108">
   <rect
       android:fillColor="#0D0D0D"
-      android:width="108"
-      android:height="108" />
+      android:width="108dp"
+      android:height="108dp" />
   <!-- Play triangle -->
   <path
       android:fillColor="#1DB954"
