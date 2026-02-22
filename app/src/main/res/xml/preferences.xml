@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory android:title="Skip Controls">
+
+        <androidx.preference.SeekBarPreference
+            android:key="skip_seconds"
+            android:title="Skip duration (seconds)"
+            android:summary="How many seconds to skip back or forward"
+            android:defaultValue="20"
+            android:max="60"
+            app:min="5"
+            app:showSeekBarValue="true" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Brightness">
+
+        <androidx.preference.Preference
+            android:key="grant_brightness_permission"
+            android:title="Allow system brightness control"
+            android:summary="Tap to grant permission" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
