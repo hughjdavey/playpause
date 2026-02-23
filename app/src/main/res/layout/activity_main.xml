@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Layout structure (top to bottom):
+      - Title bar (app name + settings)
+      - Volume slider
+      - Brightness slider
+      - Now playing: title, artist, progress bar, timestamps
+      - Button cluster: skip back + skip forward (ears) above play/pause (head)
+-->
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -7,7 +15,8 @@
     android:background="@color/background"
     android:padding="24dp">
 
-    <!-- Settings button top right -->
+    <!-- ── Top bar ── -->
+
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnSettings"
         style="@style/Widget.Material3.Button.IconButton"
@@ -17,7 +26,6 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- App title -->
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/appTitle"
         android:layout_width="wrap_content"
@@ -30,27 +38,26 @@
         app:layout_constraintBottom_toBottomOf="@id/btnSettings"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <!-- Permission banner -->
+    <!-- ── Permission banner ── -->
+
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/permissionBanner"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:visibility="gone"
         app:cardBackgroundColor="#1A2E1A"
-        app:strokeColor="#1DB954"
+        app:strokeColor="@color/accent"
         app:strokeWidth="1dp"
         app:cardCornerRadius="12dp"
         app:layout_constraintTop_toBottomOf="@id/btnSettings"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="12dp">
-
+        android:layout_marginTop="8dp">
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="16dp">
-
             <androidx.appcompat.widget.AppCompatTextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -58,7 +65,6 @@
                 android:textColor="@color/accent"
                 android:textSize="14sp"
                 android:textStyle="bold" />
-
             <androidx.appcompat.widget.AppCompatTextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -66,63 +72,63 @@
                 android:textColor="@color/text_secondary"
                 android:textSize="12sp"
                 android:layout_marginTop="4dp" />
-
         </LinearLayout>
-
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- Central play/pause button -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnPlayPause"
-        style="@style/Widget.Material3.Button.ElevatedButton"
-        android:layout_width="220dp"
-        android:layout_height="220dp"
-        android:text="Play"
-        android:textSize="22sp"
-        android:textColor="@color/text_on_accent"
-        app:backgroundTint="@color/accent"
-        app:cornerRadius="110dp"
-        app:iconSize="56dp"
-        app:iconGravity="top"
-        app:iconPadding="8dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
+    <!-- ── Sliders (anchored to top) ── -->
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/volumeLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🔊  Volume"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        app:layout_constraintTop_toBottomOf="@id/btnSettings"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        android:layout_marginTop="16dp" />
 
-    <!-- Skip back button -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnSkipBack"
-        style="@style/Widget.Material3.Button.OutlinedButton"
-        android:layout_width="110dp"
-        android:layout_height="110dp"
-        android:text="−20s"
-        android:textSize="18sp"
-        android:textColor="@color/text_primary"
-        app:strokeColor="@color/outline"
-        app:cornerRadius="55dp"
-        app:layout_constraintTop_toTopOf="@id/btnPlayPause"
-        app:layout_constraintBottom_toBottomOf="@id/btnPlayPause"
-        app:layout_constraintEnd_toStartOf="@id/btnPlayPause"
-        app:layout_constraintStart_toStartOf="parent" />
+    <SeekBar
+        android:id="@+id/volumeSlider"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:progressDrawable="@drawable/seekbar_track"
+        android:thumb="@drawable/seekbar_thumb"
+        android:paddingStart="0dp"
+        android:paddingEnd="0dp"
+        app:layout_constraintTop_toBottomOf="@id/volumeLabel"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="4dp" />
 
-    <!-- Skip forward button -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnSkipForward"
-        style="@style/Widget.Material3.Button.OutlinedButton"
-        android:layout_width="110dp"
-        android:layout_height="110dp"
-        android:text="+20s"
-        android:textSize="18sp"
-        android:textColor="@color/text_primary"
-        app:strokeColor="@color/outline"
-        app:cornerRadius="55dp"
-        app:layout_constraintTop_toTopOf="@id/btnPlayPause"
-        app:layout_constraintBottom_toBottomOf="@id/btnPlayPause"
-        app:layout_constraintStart_toEndOf="@id/btnPlayPause"
-        app:layout_constraintEnd_toEndOf="parent" />
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/brightnessLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="☀  Brightness"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        app:layout_constraintTop_toBottomOf="@id/volumeSlider"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="8dp" />
 
-    <!-- Now playing section: title and artist -->
+    <SeekBar
+        android:id="@+id/brightnessSlider"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:max="255"
+        android:progress="128"
+        android:progressDrawable="@drawable/seekbar_track"
+        android:thumb="@drawable/seekbar_thumb"
+        android:paddingStart="0dp"
+        android:paddingEnd="0dp"
+        app:layout_constraintTop_toBottomOf="@id/brightnessLabel"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="4dp" />
+
+    <!-- ── Now playing (centred vertically between sliders and buttons) ── -->
+
     <LinearLayout
         android:id="@+id/nowPlayingSection"
         android:layout_width="0dp"
@@ -130,12 +136,10 @@
         android:orientation="vertical"
         android:gravity="center"
         android:visibility="invisible"
-        app:layout_constraintTop_toBottomOf="@id/btnPlayPause"
+        app:layout_constraintTop_toBottomOf="@id/brightnessSlider"
+        app:layout_constraintBottom_toTopOf="@id/btnSkipBack"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/progressSection"
-        android:layout_marginTop="20dp"
-        android:layout_marginBottom="4dp">
+        app:layout_constraintEnd_toEndOf="parent">
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvTitle"
@@ -161,107 +165,109 @@
             android:ellipsize="end"
             android:layout_marginTop="3dp" />
 
-    </LinearLayout>
-
-    <!-- Progress section: bar + elapsed/total labels -->
-    <LinearLayout
-        android:id="@+id/progressSection"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:visibility="invisible"
-        app:layout_constraintBottom_toTopOf="@id/volumeLabel"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="20dp">
-
-        <ProgressBar
-            android:id="@+id/progressBar"
-            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="6dp"
-            android:progressDrawable="@drawable/seekbar_track"
-            android:max="100"
-            android:progress="0" />
-
+        <!-- Progress bar + timestamps -->
         <LinearLayout
+            android:id="@+id/progressSection"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="6dp">
+            android:orientation="vertical"
+            android:visibility="invisible"
+            android:layout_marginTop="12dp">
 
-            <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/tvElapsed"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="0:00"
-                android:textColor="@color/text_secondary"
-                android:textSize="13sp" />
+            <ProgressBar
+                android:id="@+id/progressBar"
+                style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="6dp"
+                android:progressDrawable="@drawable/seekbar_track"
+                android:max="100"
+                android:progress="0" />
 
-            <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/tvTotal"
-                android:layout_width="0dp"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="0:00"
-                android:textColor="@color/text_secondary"
-                android:textSize="13sp"
-                android:gravity="end" />
+                android:orientation="horizontal"
+                android:layout_marginTop="6dp">
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/tvElapsed"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="0:00"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/tvTotal"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="0:00"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp"
+                    android:gravity="end" />
+
+            </LinearLayout>
 
         </LinearLayout>
 
     </LinearLayout>
 
-    <!-- Volume label -->
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/volumeLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="🔊  Volume"
-        android:textColor="@color/text_secondary"
-        android:textSize="14sp"
-        app:layout_constraintBottom_toTopOf="@id/volumeSlider"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginBottom="8dp" />
+    <!-- ── Button cluster: skip buttons (ears) above play button (head) ── -->
 
-    <!-- Volume slider -->
-    <SeekBar
-        android:id="@+id/volumeSlider"
-        android:layout_width="0dp"
-        android:layout_height="48dp"
-        android:progressDrawable="@drawable/seekbar_track"
-        android:thumb="@drawable/seekbar_thumb"
-        android:paddingStart="0dp"
-        android:paddingEnd="0dp"
-        app:layout_constraintBottom_toTopOf="@id/brightnessLabel"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginBottom="16dp" />
+    <!--
+        The skip buttons are positioned above the play button, horizontally spread
+        to sit roughly over its left and right thirds, with a small gap below them
+        before the play button begins. They're linked to btnPlayPause for alignment.
+    -->
 
-    <!-- Brightness label -->
-    <androidx.appcompat.widget.AppCompatTextView
-        android:id="@+id/brightnessLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="☀  Brightness"
-        android:textColor="@color/text_secondary"
-        android:textSize="14sp"
-        app:layout_constraintBottom_toTopOf="@id/brightnessSlider"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginBottom="8dp" />
+    <!-- Skip back (left ear) -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSkipBack"
+        style="@style/Widget.Material3.Button.ElevatedButton"
+        android:layout_width="120dp"
+        android:layout_height="80dp"
+        android:text="−20s"
+        android:textSize="20sp"
+        android:textColor="@color/text_on_accent_dark"
+        app:backgroundTint="@color/accent_dark"
+        app:cornerRadius="40dp"
+        app:layout_constraintBottom_toTopOf="@id/btnPlayPause"
+        app:layout_constraintStart_toStartOf="@id/btnPlayPause"
+        android:layout_marginStart="8dp"
+        android:layout_marginBottom="12dp" />
 
-    <!-- Brightness slider -->
-    <SeekBar
-        android:id="@+id/brightnessSlider"
-        android:layout_width="0dp"
-        android:layout_height="48dp"
-        android:max="255"
-        android:progress="128"
-        android:progressDrawable="@drawable/seekbar_track"
-        android:thumb="@drawable/seekbar_thumb"
-        android:paddingStart="0dp"
-        android:paddingEnd="0dp"
+    <!-- Skip forward (right ear) -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSkipForward"
+        style="@style/Widget.Material3.Button.ElevatedButton"
+        android:layout_width="120dp"
+        android:layout_height="80dp"
+        android:text="+20s"
+        android:textSize="20sp"
+        android:textColor="@color/text_on_accent_dark"
+        app:backgroundTint="@color/accent_dark"
+        app:cornerRadius="40dp"
+        app:layout_constraintBottom_toTopOf="@id/btnPlayPause"
+        app:layout_constraintEnd_toEndOf="@id/btnPlayPause"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Play/pause (head) — larger now it has the row to itself -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnPlayPause"
+        style="@style/Widget.Material3.Button.ElevatedButton"
+        android:layout_width="240dp"
+        android:layout_height="240dp"
+        android:text="Play"
+        android:textSize="24sp"
+        android:textColor="@color/text_on_accent"
+        app:backgroundTint="@color/accent"
+        app:cornerRadius="120dp"
+        app:iconSize="60dp"
+        app:iconGravity="top"
+        app:iconPadding="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
