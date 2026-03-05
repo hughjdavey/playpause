@@ -13,11 +13,17 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.provider.Settings
+import android.view.GestureDetector
 import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.View
+import android.view.WindowInsetsController
 import android.view.WindowManager
 import android.widget.SeekBar
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.preference.PreferenceManager
 import com.example.mediaremote.databinding.ActivityMainBinding
 import com.example.mediaremote.settings.SettingsActivity
@@ -27,9 +33,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var audioManager: AudioManager
     private lateinit var mediaSessionManager: MediaSessionManager
+    private lateinit var gestureDetector: GestureDetector
 
     private var activeController: MediaController? = null
     private var trackDurationMs: Long = 0L
+
+    // Brightness overlay: slider goes 0–100, but we cap the overlay alpha at this
+    // value so the screen never goes fully black. 0.95 leaves it faintly visible.
+    private val maxOverlayAlpha = 0.95f
 
     private val progressHandler = Handler(Looper.getMainLooper())
     private val progressTick = object : Runnable {
@@ -67,6 +78,10 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        WindowCompat.getInsetsController(window, window.decorView).let {
+            it.hide(WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.navigationBars())
+            it.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        }
 
         audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         mediaSessionManager = getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
@@ -74,12 +89,13 @@ class MainActivity : AppCompatActivity() {
         setupButtons()
         setupVolumeSlider()
         setupBrightnessSlider()
+        setupDoubleTapReset()
     }
 
     override fun onResume() {
         super.onResume()
         syncVolumeSlider()
-        syncBrightnessSlider()
+        restoreBrightnessOverlay()
         updateSkipButtonLabels()
 
         if (hasNotificationListenerPermission()) {
@@ -96,6 +112,12 @@ class MainActivity : AppCompatActivity() {
         super.onPause()
         stopProgressTicker()
         detachMediaController()
+    }
+
+    // Pass touch events through the gesture detector for double-tap detection
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        gestureDetector.onTouchEvent(ev)
+        return super.dispatchTouchEvent(ev)
     }
 
     // ---- Permission ----
@@ -304,14 +326,13 @@ class MainActivity : AppCompatActivity() {
     // ---- Volume ----
 
     private fun setupVolumeSlider() {
+        binding.volumeSlider.thumbOffset = 0
         val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
         binding.volumeSlider.max = maxVolume
 
         binding.volumeSlider.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (fromUser) {
-                    audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, progress, 0)
-                }
+                if (fromUser) audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, progress, 0)
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
@@ -322,33 +343,53 @@ class MainActivity : AppCompatActivity() {
         binding.volumeSlider.progress = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
     }
 
-    // ---- Brightness ----
+    // ---- Brightness overlay ----
 
     private fun setupBrightnessSlider() {
+        binding.brightnessSlider.thumbOffset = 0
+        // Slider goes 0 (no overlay = bright) to 100 (max overlay = dim)
+        binding.brightnessSlider.max = 100
+
         binding.brightnessSlider.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (fromUser) setBrightness(progress)
+                if (fromUser) applyBrightnessOverlay(progress)
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                // Save position when user lifts finger
+                saveBrightnessProgress(seekBar?.progress ?: 0)
+            }
         })
     }
 
-    private fun syncBrightnessSlider() {
-        try {
-            val b = Settings.System.getInt(contentResolver, Settings.System.SCREEN_BRIGHTNESS)
-            binding.brightnessSlider.progress = b
-        } catch (e: Settings.SettingNotFoundException) {
-            binding.brightnessSlider.progress = 128
-        }
+    private fun applyBrightnessOverlay(progress: Int) {
+        // Invert: progress 100 = brightest (no overlay), progress 0 = darkest (max overlay)
+        val alpha = ((100 - progress) / 100f) * maxOverlayAlpha
+        binding.brightnessOverlay.alpha = alpha
     }
 
-    private fun setBrightness(value: Int) {
-        val lp = window.attributes
-        lp.screenBrightness = value / 255f
-        window.attributes = lp
-        if (Settings.System.canWrite(this)) {
-            Settings.System.putInt(contentResolver, Settings.System.SCREEN_BRIGHTNESS, value)
-        }
+    private fun restoreBrightnessOverlay() {
+        val saved = PreferenceManager.getDefaultSharedPreferences(this)
+            .getInt("brightness_overlay_progress", 100)
+        binding.brightnessSlider.progress = saved
+        applyBrightnessOverlay(saved)
+    }
+
+    private fun saveBrightnessProgress(progress: Int) {
+        PreferenceManager.getDefaultSharedPreferences(this)
+            .edit()
+            .putInt("brightness_overlay_progress", progress)
+            .apply()
+    }
+
+    private fun setupDoubleTapReset() {
+        gestureDetector = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
+            override fun onDoubleTap(e: MotionEvent): Boolean {
+                binding.brightnessSlider.progress = 100
+                applyBrightnessOverlay(100)
+                saveBrightnessProgress(100)
+                return true
+            }
+        })
     }
 }

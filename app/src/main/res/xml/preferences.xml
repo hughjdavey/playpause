@@ -22,11 +22,6 @@
             android:title="Play/pause sync"
             android:summary="Tap to grant" />
 
-        <androidx.preference.Preference
-            android:key="grant_brightness_permission"
-            android:title="System brightness control"
-            android:summary="Tap to grant" />
-
     </PreferenceCategory>
 
 </PreferenceScreen>

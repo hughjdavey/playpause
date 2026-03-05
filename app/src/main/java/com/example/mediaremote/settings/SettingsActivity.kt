@@ -38,13 +38,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
             startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
             true
         }
-
-        findPreference<Preference>("grant_brightness_permission")?.setOnPreferenceClickListener {
-            val intent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
-            intent.data = Uri.parse("package:${requireContext().packageName}")
-            startActivity(intent)
-            true
-        }
     }
 
     override fun onResume() {
@@ -64,12 +57,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
             "✓ Permission granted — play/pause button syncs with real playback state"
         } else {
             "Tap to grant — without this the button can't read real playback state"
-        }
-
-        findPreference<Preference>("grant_brightness_permission")?.summary = if (Settings.System.canWrite(ctx)) {
-            "✓ Permission granted — brightness slider also changes system brightness"
-        } else {
-            "Tap to grant — without this the slider only affects brightness while the app is open"
         }
     }
 }
